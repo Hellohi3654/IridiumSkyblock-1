@@ -10,6 +10,13 @@ public class Messages {
     public String noPermission = "%prefix% &7You don't have permission for that.";
     public String mustBeAPlayer = "%prefix% &7You must be a player to execute this command.";
     public String unknownCommand = "%prefix% &7Unknown Command, Try /is help";
+    public String helpCommandHeader = "&8===== &b&lIridiumSkyblock Help &r&8=====";
+    public String helpCommandMessage = "<GRADIENT:09C6F9>/is %command%</GRADIENT:045DE9>&r: &7%description%";
+    public String helpCommandFooter = " &7Page %page% of %max_page% ";
+    public String helpCommandPreviousPage = "&b<<";
+    public String helpCommandNextPage = "&b>>";
+    public String helpCommandNextPageHover = "&7Click to go to the next page.";
+    public String helpCommandPreviousPageHover = "&7Click to go to the previous page.";
     public String creatingIsland = "%prefix% &7Creating Island...";
     public String regeneratingIsland = "%prefix% &7Regenerating Island...";
     public String alreadyHaveIsland = "%prefix% &7You already have an Island.";
@@ -49,6 +56,7 @@ public class Messages {
     public String demotedPlayer = "%prefix% &7You have demoted %player% to %rank%.";
     public String userDemotedPlayer = "%prefix% &7%promoter% has demoted %player% to %rank%.";
     public String transferredOwnership = "%prefix% &7%oldowner% has transferred Island ownership to %newowner%.";
+    public String islandValue = "%prefix% &b&l * &7%rank%: &b%value%";
     public String cannotTransferYourself = "%prefix% &7You cannot transfer the island ownership to yourself.";
     public String cannotBreakBlocks = "%prefix% &7You cannot break blocks on this island.";
     public String cannotPlaceBlocks = "%prefix% &7You cannot place blocks on this island.";
@@ -56,4 +64,21 @@ public class Messages {
     public String cannotMineSpawners = "%prefix% &7You cannot place blocks on this island.";
     public String cannotOpenDoors = "%prefix% &7You cannot open doors on this island.";
     public String cannotOpenContainers = "%prefix% &7You cannot open containers on this island.";
+    public String cannotChangePermissions = "%prefix% &7You cannot change this Permission.";
+    public String cannotUseRedstone = "%prefix% &7You cannot use redstone on this island.";
+    public String cannotHurtMobs = "%prefix% &7You cannot hurt mobs on this island.";
+    public String cannotInviteMember = "%prefix% &7You cannot invite members to this island.";
+    public String cannotRegenIsland = "%prefix% &7You cannot regenerate your island.";
+    public String cannotInteractEntities = "%prefix% &7You cannot interact with entities on this island.";
+    public String cannotDropItems = "%prefix% &7You cannot drop items on this island.";
+    public String cannotTransferOwnership = "%prefix% &7Only the Island Owner can transfer ownership.";
+    public String nowBypassing = "%prefix% &7You are now bypassing island restrictions.";
+    public String noLongerBypassing = "%prefix% &7You are no longer bypassing island restrictions.";
+    public String setSchematicPosition = "%prefix% &7The position has been set.";
+    public String addedSchematic = "%prefix% &7Schematic has been added.";
+    public String invalidPositionCommandSyntax = "%prefix% &7Please use /is position <1/2>.";
+    public String invalidSaveSchematicCommandSyntax = "%prefix% &7Please use /is saveSchematic <Name>.";
+    public String invalidSchematicPositions = "%prefix% &7You haven't set valid schematic positions with /is position.";
+    public String missingSchematicConfirmation = "%prefix% &7A schematic by that name already exists, to overwrite it use /is save <name> confirm.";
+
 }

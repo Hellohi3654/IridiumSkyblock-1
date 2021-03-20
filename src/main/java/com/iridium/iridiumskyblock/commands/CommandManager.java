@@ -40,7 +40,6 @@ public class CommandManager implements CommandExecutor, TabCompleter {
      */
     public void registerCommands() {
         registerCommand(new ReloadCommand());
-        registerCommand(new CreditsCommand());
         registerCommand(new CreateCommand());
         registerCommand(new DeleteCommand());
         registerCommand(new RegenCommand());
@@ -59,6 +58,13 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         registerCommand(new PromoteCommand());
         registerCommand(new DemoteCommand());
         registerCommand(new TransferCommand());
+        registerCommand(new PermissionsCommand());
+        registerCommand(new BypassCommand());
+        registerCommand(new HelpCommand());
+        registerCommand(new ValueCommand());
+        registerCommand(new TopCommand());
+        registerCommand(new PositionCommand());
+        registerCommand(new SaveSchematicCommand());
 
         commands.sort(Comparator.comparing(command -> command.aliases.get(0)));
     }

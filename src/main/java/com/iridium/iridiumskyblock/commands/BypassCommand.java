@@ -1,45 +1,41 @@
 package com.iridium.iridiumskyblock.commands;
 
 import com.iridium.iridiumskyblock.IridiumSkyblock;
+import com.iridium.iridiumskyblock.api.IridiumSkyblockAPI;
+import com.iridium.iridiumskyblock.database.User;
 import com.iridium.iridiumskyblock.utils.StringUtils;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * Display plugin information to the player
+ * Command which creates a new island for an user.
  */
-public class AboutCommand extends Command {
-
-    /*
-    Please dont add yourself to this list, if you contribute enough I (Peaches) will add you.
-    */
-    private final List<String> contributors = Arrays.asList("das_", "SlashRemix");
+public class BypassCommand extends Command {
 
     /**
      * The default constructor.
      */
-    public AboutCommand() {
-        super(Collections.singletonList("about"), "Displays plugin info", "", false);
+    public BypassCommand() {
+        super(Collections.singletonList("bypass"), "bypass island restrictions", "iridiumskyblock.bypass", true);
     }
 
     /**
      * Executes the command for the specified {@link CommandSender} with the provided arguments.
      * Not called when the command execution was invalid (no permission, no player or command disabled).
-     * Displays plugin info for the player
+     * Tries to create a new island for the user.
      *
      * @param sender The CommandSender which executes this command
-     * @param args The arguments used with this command. They contain the sub-command
+     * @param args   The arguments used with this command. They contain the sub-command
      */
     @Override
     public void execute(CommandSender sender, String[] args) {
-        sender.sendMessage(StringUtils.color("&7Plugin Name: &bIridiumSkyblock"));
-        sender.sendMessage(StringUtils.color("&7Plugin Version: &b" + IridiumSkyblock.getInstance().getDescription().getVersion()));
-        sender.sendMessage(StringUtils.color("&7Plugin Author: &bPeaches_MLG"));
-        sender.sendMessage(StringUtils.color("&7Plugin Contributors: &b" + String.join(", ", contributors)));
+        Player player = (Player) sender;
+        User user = IridiumSkyblockAPI.getInstance().getUser(player);
+        user.setBypass(!user.isBypass());
+        player.sendMessage(StringUtils.color((user.isBypass() ? IridiumSkyblock.getInstance().getMessages().nowBypassing : IridiumSkyblock.getInstance().getMessages().noLongerBypassing).replace("%prefix%", IridiumSkyblock.getInstance().getConfiguration().prefix)));
     }
 
     /**
@@ -53,9 +49,7 @@ public class AboutCommand extends Command {
      */
     @Override
     public List<String> onTabComplete(CommandSender commandSender, org.bukkit.command.Command command, String label, String[] args) {
-        // We currently don't want to tab-completion here
-        // Return a new ArrayList so it isn't a list of online players
-        return Collections.emptyList();
+        return null;
     }
 
 }

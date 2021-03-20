@@ -44,7 +44,7 @@ public class KickCommand extends Command {
             OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(args[1]);
             User offlineUser = IridiumSkyblockAPI.getInstance().getUser(offlinePlayer);
             if (island.get().equals(offlineUser.getIsland().orElse(null))) {
-                if (offlineUser.getIslandRank().getLevel() >= user.getIslandRank().getLevel()) {
+                if (offlineUser.getIslandRank().getLevel() >= user.getIslandRank().getLevel() || !IridiumSkyblock.getInstance().getIslandManager().getIslandPermission(island.get(), user, IridiumSkyblock.getInstance().getPermissions().kick)) {
                     player.sendMessage(StringUtils.color(IridiumSkyblock.getInstance().getMessages().cannotKickUser.replace("%prefix%", IridiumSkyblock.getInstance().getConfiguration().prefix)));
                 } else {
                     if (offlinePlayer instanceof Player) {
@@ -55,7 +55,7 @@ public class KickCommand extends Command {
                     for (User member : island.get().getMembers()) {
                         Player p = Bukkit.getPlayer(member.getUuid());
                         if (p != null) {
-                            if (p != player) {
+                            if (!p.equals(player)) {
                                 p.sendMessage(StringUtils.color(IridiumSkyblock.getInstance().getMessages().kickedPlayer.replace("%kicker%", player.getName()).replace("%player%", offlineUser.getName()).replace("%prefix%", IridiumSkyblock.getInstance().getConfiguration().prefix)));
                             } else {
                                 p.sendMessage(StringUtils.color(IridiumSkyblock.getInstance().getMessages().youKickedPlayer.replace("%player%", offlineUser.getName()).replace("%prefix%", IridiumSkyblock.getInstance().getConfiguration().prefix)));

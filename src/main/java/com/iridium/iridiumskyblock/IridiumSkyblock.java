@@ -1,11 +1,10 @@
 package com.iridium.iridiumskyblock;
 
-import com.heretere.hdl.dependency.maven.annotation.MavenDependency;
-import com.heretere.hdl.relocation.annotation.Relocation;
-import com.heretere.hdl.spigot.DependencyPlugin;
 import com.iridium.iridiumskyblock.api.IridiumSkyblockAPI;
+import com.iridium.iridiumskyblock.commands.BlockValues;
 import com.iridium.iridiumskyblock.commands.CommandManager;
 import com.iridium.iridiumskyblock.configs.*;
+import com.iridium.iridiumskyblock.database.Island;
 import com.iridium.iridiumskyblock.generators.SkyblockGenerator;
 import com.iridium.iridiumskyblock.listeners.*;
 import com.iridium.iridiumskyblock.managers.DatabaseManager;
@@ -19,23 +18,22 @@ import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.generator.ChunkGenerator;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.stream.Collectors;
 
 /**
  * The main class of this plugin which handles initialization
  * and shutdown of the plugin.
  */
-@MavenDependency("com|fasterxml|jackson|core:jackson-databind:2.12.1")
-@MavenDependency("com|fasterxml|jackson|core:jackson-core:2.12.1")
-@MavenDependency("com|fasterxml|jackson|core:jackson-annotations:2.12.1")
-@MavenDependency("com|fasterxml|jackson|dataformat:jackson-dataformat-yaml:2.12.1")
-@MavenDependency("org|yaml:snakeyaml:1.27")
-@Relocation(from = "org|yaml", to = "com|iridium|iridiumskyblock")
 @Getter
-public class IridiumSkyblock extends DependencyPlugin {
+public class IridiumSkyblock extends JavaPlugin {
 
     private static IridiumSkyblock instance;
 
@@ -54,11 +52,17 @@ public class IridiumSkyblock extends DependencyPlugin {
     private Schematics schematics;
     private Inventories inventories;
     private Permissions permissions;
+    private BlockValues blockValues;
 
     private ChunkGenerator chunkGenerator;
+    private List<Permission> permissionList;
 
+    /**
+     * Code that should be executed before this plugin gets enabled.
+     * Sets the default world generator.
+     */
     @Override
-    public void load() {
+    public void onLoad() {
         chunkGenerator = new SkyblockGenerator();
     }
 
@@ -66,8 +70,11 @@ public class IridiumSkyblock extends DependencyPlugin {
      * Plugin startup logic.
      */
     @Override
-    public void enable() {
+    public void onEnable() {
         instance = this;
+
+        getDataFolder().mkdir();
+
         // Initialize the configs
         this.persist = new Persist(Persist.PersistType.YAML, this);
         loadConfigs();
@@ -84,6 +91,8 @@ public class IridiumSkyblock extends DependencyPlugin {
             exception.printStackTrace();
             Bukkit.getPluginManager().disablePlugin(this);
         }
+
+        // Initialize the manager classes (bad) and create the world
         this.islandManager = new IslandManager();
         this.userManager = new UserManager();
         this.islandManager.createWorld(World.Environment.NORMAL, configuration.worldName);
@@ -102,6 +111,20 @@ public class IridiumSkyblock extends DependencyPlugin {
 
         //Send island border to all players
         Bukkit.getOnlinePlayers().forEach(player -> IridiumSkyblockAPI.getInstance().getIslandViaLocation(player.getLocation()).ifPresent(island -> PlayerUtils.sendBorder(player, island)));
+
+        //Auto recalculate islands
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+            ListIterator<Integer> islands = getDatabaseManager().getIslandList().stream().map(Island::getId).collect(Collectors.toList()).listIterator();
+
+            @Override
+            public void run() {
+                if (!islands.hasNext()) {
+                    islands = getDatabaseManager().getIslandList().stream().map(Island::getId).collect(Collectors.toList()).listIterator();
+                } else {
+                    getIslandManager().getIslandById(islands.next()).ifPresent(island -> getIslandManager().recalculateIsland(island));
+                }
+            }
+        }, 0, getConfiguration().islandRecalculateInterval * 20L);
 
         getLogger().info("----------------------------------------");
         getLogger().info("");
@@ -124,7 +147,7 @@ public class IridiumSkyblock extends DependencyPlugin {
      * Plugin shutdown logic.
      */
     @Override
-    public void disable() {
+    public void onDisable() {
         saveData();
         getLogger().info("-------------------------------");
         getLogger().info("");
@@ -143,6 +166,10 @@ public class IridiumSkyblock extends DependencyPlugin {
         Bukkit.getPluginManager().registerEvents(new BlockBreakListener(), this);
         Bukkit.getPluginManager().registerEvents(new BlockPlaceListener(), this);
         Bukkit.getPluginManager().registerEvents(new BucketListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerInteractListener(), this);
+        Bukkit.getPluginManager().registerEvents(new EntityDamageListener(), this);
+        Bukkit.getPluginManager().registerEvents(new EntityPickupItemListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerDropItemListener(), this);
     }
 
     /**
@@ -153,6 +180,7 @@ public class IridiumSkyblock extends DependencyPlugin {
         getDatabaseManager().saveUsers();
         getDatabaseManager().saveIslandInvites();
         getDatabaseManager().saveIslandPermissions();
+        getDatabaseManager().saveIslandBlocks();
     }
 
     /**
@@ -167,6 +195,26 @@ public class IridiumSkyblock extends DependencyPlugin {
         this.schematics = persist.load(Schematics.class);
         this.inventories = persist.load(Inventories.class);
         this.permissions = persist.load(Permissions.class);
+        this.blockValues = persist.load(BlockValues.class);
+
+        permissionList = new ArrayList<>();
+        permissionList.add(permissions.redstone);
+        permissionList.add(permissions.blockPlace);
+        permissionList.add(permissions.blockBreak);
+        permissionList.add(permissions.bucket);
+        permissionList.add(permissions.doors);
+        permissionList.add(permissions.killMobs);
+        permissionList.add(permissions.openContainers);
+        permissionList.add(permissions.spawners);
+        permissionList.add(permissions.changePermissions);
+        permissionList.add(permissions.kick);
+        permissionList.add(permissions.invite);
+        permissionList.add(permissions.regen);
+        permissionList.add(permissions.promote);
+        permissionList.add(permissions.demote);
+        permissionList.add(permissions.pickupItems);
+        permissionList.add(permissions.dropItems);
+        permissionList.add(permissions.interactEntities);
     }
 
     /**
@@ -181,6 +229,7 @@ public class IridiumSkyblock extends DependencyPlugin {
         this.persist.save(schematics);
         this.persist.save(inventories);
         this.persist.save(permissions);
+        this.persist.save(blockValues);
     }
 
     public static IridiumSkyblock getInstance() {
